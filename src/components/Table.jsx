@@ -18,9 +18,6 @@ function Table({ columns, data, onEdit, onDelete }) {
                       {column.label}
                     </th>
                   ))}
-                  <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                    <span className="sr-only">Actions</span>
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
@@ -34,22 +31,6 @@ function Table({ columns, data, onEdit, onDelete }) {
                           {item[column.key]}
                         </td>
                       ))}
-                    <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => onEdit(item)} // This calls the onEdit prop on click
-                          className="inline-flex items-center justify-center rounded-lg bg-orange-50 p-2 text-orange-600 hover:bg-orange-100 transition-all duration-200"
-                        >
-                          <PencilIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => onDelete(item.id)} // This calls the onDelete prop on click
-                          className="inline-flex items-center justify-center rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100 transition-all duration-200"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>

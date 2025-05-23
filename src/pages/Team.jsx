@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Table from '../components/Table';
 
-const initialTeams = [
+export const initialTeams = [
   { id: 1, name: 'Team Alpha', coach: 'John Smith', athletes: 8 },
   { id: 2, name: 'Team Beta', coach: 'Sarah Johnson', athletes: 6 },
   { id: 3, name: 'Team Gamma', coach: 'Mike Brown', athletes: 10 },

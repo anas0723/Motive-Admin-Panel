@@ -1,4 +1,4 @@
-import { UsersIcon, UserGroupIcon, UserIcon, ChartBarIcon, TrophyIcon, FireIcon, HeartIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { UsersIcon, UserGroupIcon, UserIcon, ChartBarIcon, TrophyIcon, FireIcon, HeartIcon, ClockIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 
 const stats = [
@@ -20,6 +20,44 @@ function Dashboard() {
   const handleNavigation = (path) => {
     navigate(path);
   };
+
+  const quickActions = [
+    {
+      name: 'Add New Team',
+      description: 'Create a new team.',
+      icon: UserGroupIcon,
+      onClick: () => handleNavigation('/team'),
+      color: 'blue',
+    },
+    {
+      name: 'Add New Athlete',
+      description: 'Register a new athlete.',
+      icon: UsersIcon,
+      onClick: () => handleNavigation('/athlete'),
+      color: 'orange',
+    },
+    {
+      name: 'Add New Coach',
+      description: 'Onboard a new coach.',
+      icon: AcademicCapIcon,
+      onClick: () => handleNavigation('/coach'),
+      color: 'yellow',
+    },
+    {
+      name: 'Manage Schools',
+      description: 'View and manage schools.',
+      icon: AcademicCapIcon,
+      onClick: () => handleNavigation('/school'),
+      color: 'green',
+    },
+  ];
+
+  const summaryCards = [
+    { title: 'Total Teams', value: '3', icon: UserGroupIcon },
+    { title: 'Total Athletes', value: '15', icon: UsersIcon },
+    { title: 'Total Coaches', value: '5', icon: AcademicCapIcon },
+    { title: 'Total Schools', value: '20', icon: AcademicCapIcon },
+  ];
 
   return (
     <div className="space-y-6">
@@ -78,25 +116,17 @@ function Dashboard() {
 
         <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
           <h2 className="text-base font-semibold leading-7 text-gray-900">Quick Actions</h2>
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            <button
-              className="rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 text-sm font-medium text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm"
-              onClick={() => handleNavigation('/team')}
-            >
-              Add New Team
-            </button>
-            <button
-              className="rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 text-sm font-medium text-white hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-sm"
-              onClick={() => handleNavigation('/athlete')}
-            >
-              Add New Athlete
-            </button>
-            <button
-              className="rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 py-3 text-sm font-medium text-white hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 shadow-sm"
-              onClick={() => handleNavigation('/coach')}
-            >
-              Add New Coach
-            </button>
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {quickActions.map((action) => (
+              <button
+                key={action.name}
+                className={`relative block w-full rounded-lg bg-white p-6 text-center shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-${action.color}-500 focus:ring-offset-2 border-t-4 border-${action.color}-500`}
+                onClick={action.onClick}
+              >
+                <span className="block text-base font-semibold text-gray-900">{action.name}</span>
+                {/* <span className="block text-sm text-gray-600 mt-1">{action.description}</span> */}
+              </button>
+            ))}
           </div>
         </div>
       </div>

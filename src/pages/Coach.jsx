@@ -1,19 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
 import Table from '../components/Table';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import CoachDetailCard from '../components/CoachDetailCard';
+import { initialTeams } from './Team'; // Import initialTeams
 
 const initialCoaches = [
-  { id: 1, name: 'Sarah Wilson', team: 'Team Alpha', experience: '10 years', specialization: 'Running', school: 'Central High School' },
-  { id: 2, name: 'David Brown', team: 'Team Beta', experience: '8 years', specialization: 'Swimming', school: 'Northwood Academy' },
-  { id: 3, name: 'Lisa Chen', team: 'Team Alpha', experience: '12 years', specialization: 'Cycling', school: 'Riverside Prep' },
+  { id: 1, name: 'Sarah Wilson', teamName: 'Team Alpha', experience: '10 years', specialization: 'Running', school: 'Central High School' },
+  { id: 2, name: 'David Brown', teamName: 'Team Beta', experience: '8 years', specialization: 'Swimming', school: 'Northwood Academy' },
+  { id: 3, name: 'Lisa Chen', teamName: 'Team Alpha', experience: '12 years', specialization: 'Cycling', school: 'Riverside Prep' },
 ];
 
 const columns = [
   { key: 'name', label: 'Name' },
-  { key: 'team', label: 'Team' },
+  { key: 'teamName', label: 'Team' }, // Use teamName for the column
   { key: 'experience', label: 'Experience' },
   { key: 'specialization', label: 'Specialization' },
   { key: 'school', label: 'School' },
+  { key: 'actions', label: 'Actions' },
 ];
 
 function Coach() {
@@ -21,7 +24,7 @@ function Coach() {
   const [editingCoach, setEditingCoach] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    team: '',
+    teamName: '',
     experience: '',
     specialization: '',
     school: '',
@@ -31,6 +34,9 @@ function Coach() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const searchRef = useRef(null);
+  const [selectedCoach, setSelectedCoach] = useState(null);
+  const [showDetailCard, setShowDetailCard] = useState(false);
+  const [teams, setTeams] = useState(initialTeams); // State to hold teams
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -45,6 +51,15 @@ function Coach() {
     };
   }, []);
 
+  useEffect(() => {
+    if (selectedCoach) {
+      setShowDetailCard(true);
+    } else {
+      const timer = setTimeout(() => setShowDetailCard(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedCoach]);
+
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -58,7 +73,7 @@ function Coach() {
     } else {
       setCoaches([...coaches, { ...formData, id: coaches.length + 1 }]);
     }
-    setFormData({ name: '', team: '', experience: '', specialization: '', school: '' });
+    setFormData({ name: '', teamName: '', experience: '', specialization: '', school: '' });
     setEditingCoach(null);
     setIsFormOpen(false);
   };
@@ -67,24 +82,27 @@ function Coach() {
     setEditingCoach(coach);
     setFormData({
       name: coach.name,
-      team: coach.team,
+      teamName: coach.teamName,
       experience: coach.experience,
       specialization: coach.specialization,
       school: coach.school,
     });
     setIsFormOpen(true);
+    setSelectedCoach(null);
   };
 
   const handleDelete = (coachToDelete) => {
     if (window.confirm(`Are you sure you want to delete ${coachToDelete.name}?`)) {
       setCoaches(coaches.filter(coach => coach.id !== coachToDelete.id));
+      setSelectedCoach(null);
     }
   };
 
   const handleAddNewClick = () => {
     setEditingCoach(null);
-    setFormData({ name: '', team: '', experience: '', specialization: '', school: '' });
+    setFormData({ name: '', teamName: '', experience: '', specialization: '', school: '' });
     setIsFormOpen(true);
+    setSelectedCoach(null);
   };
 
   const handleSearchChange = (e) => {
@@ -94,7 +112,7 @@ function Coach() {
     if (query.length > 0) {
       const filtered = coaches.filter(coach => 
         coach.name.toLowerCase().includes(query.toLowerCase()) ||
-        coach.team.toLowerCase().includes(query.toLowerCase()) ||
+        coach.teamName.toLowerCase().includes(query.toLowerCase()) ||
         coach.specialization.toLowerCase().includes(query.toLowerCase()) ||
         coach.school.toLowerCase().includes(query.toLowerCase())
       );
@@ -107,18 +125,46 @@ function Coach() {
   };
 
   const handleSuggestionClick = (coach) => {
-    setSearchQuery(`${coach.name} • ${coach.team} • ${coach.specialization} • ${coach.school}`);
+    setSearchQuery(`${coach.name} • ${coach.teamName} • ${coach.specialization} • ${coach.school}`);
     setSuggestions([]);
     setShowSuggestions(false);
   };
 
-  // Filter coaches based on search query
+  const handleViewDetails = (coach) => {
+    setSelectedCoach(coach);
+  };
+
   const filteredCoaches = coaches.filter(coach => 
     coach.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    coach.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    coach.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     coach.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
     coach.school.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ).map(coach => ({
+    ...coach,
+    actions: (
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          onClick={() => handleViewDetails(coach)}
+        >
+          View Details
+        </button>
+         <button
+          onClick={() => handleEdit(coach)}
+          className="inline-flex items-center justify-center rounded-lg bg-orange-50 p-2 text-orange-600 hover:bg-orange-100 transition-all duration-200"
+        >
+          <PencilSquareIcon className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => handleDelete(coach)}
+          className="inline-flex items-center justify-center rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100 transition-all duration-200"
+        >
+          <TrashIcon className="h-5 w-5" />
+        </button>
+      </div>
+    )
+  }));
 
   return (
     <div className="space-y-6">
@@ -140,7 +186,6 @@ function Coach() {
         </div>
       </div>
 
-      {/* Search Bar with Autocomplete */}
       <div className="relative" ref={searchRef}>
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -154,7 +199,6 @@ function Coach() {
           onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
         />
         
-        {/* Suggestions Dropdown */}
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm max-h-60">
             {suggestions.map((coach) => (
@@ -166,7 +210,7 @@ function Coach() {
                 <div className="flex items-center">
                   <span className="font-medium text-gray-900">{coach.name}</span>
                   <span className="ml-2 text-gray-500">
-                    {coach.team} • {coach.specialization} • {coach.school}
+                    {coach.teamName} • {coach.specialization} • {coach.school}
                   </span>
                 </div>
               </div>
@@ -195,18 +239,24 @@ function Coach() {
                 />
               </div>
               <div>
-                <label htmlFor="team" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="teamName" className="block text-sm font-medium text-gray-700">
                   Team
                 </label>
-                <input
-                  type="text"
-                  name="team"
-                  id="team"
-                  value={formData.team}
+                <select
+                  name="teamName"
+                  id="teamName"
+                  value={formData.teamName}
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   required
-                />
+                >
+                  <option value="">Select a Team</option>
+                  {teams.map(team => (
+                    <option key={team.id} value={team.name}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label htmlFor="experience" className="block text-sm font-medium text-gray-700">
@@ -270,11 +320,19 @@ function Coach() {
         </div>
       )}
 
+      <CoachDetailCard 
+        coach={selectedCoach} 
+        onClose={() => setSelectedCoach(null)} 
+        onEdit={handleEdit} 
+        onDelete={handleDelete}
+        show={showDetailCard}
+      />
+
       <Table
         columns={columns}
         data={filteredCoaches}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onEdit={handleEdit} // Note: onEdit and onDelete on the table row itself are now for the detail card
+        onDelete={handleDelete} // They trigger the same functions, but the buttons are rendered via the 'actions' key
       />
     </div>
   );

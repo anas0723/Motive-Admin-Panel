@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Table from '../components/Table';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import AthleteDetailCard from '../components/AthleteDetailCard';
 
 const initialAthletes = [
   { id: 1, name: 'John Doe', team: 'Team Alpha', age: 25, sport: 'Running', school: 'Central High School' },
@@ -14,6 +15,7 @@ const columns = [
   { key: 'age', label: 'Age' },
   { key: 'sport', label: 'Sport' },
   { key: 'school', label: 'School' },
+  { key: 'actions', label: 'Actions' },
 ];
 
 function Athlete() {
@@ -31,6 +33,8 @@ function Athlete() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const searchRef = useRef(null);
+  const [selectedAthlete, setSelectedAthlete] = useState(null);
+  const [showDetailCard, setShowDetailCard] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -44,6 +48,15 @@ function Athlete() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (selectedAthlete) {
+      setShowDetailCard(true);
+    } else {
+      const timer = setTimeout(() => setShowDetailCard(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedAthlete]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -73,11 +86,13 @@ function Athlete() {
       school: athlete.school,
     });
     setIsFormOpen(true);
+    setSelectedAthlete(null);
   };
 
   const handleDelete = (athleteToDelete) => {
     if (window.confirm(`Are you sure you want to delete ${athleteToDelete.name}?`)) {
       setAthletes(athletes.filter(athlete => athlete.id !== athleteToDelete.id));
+      setSelectedAthlete(null);
     }
   };
 
@@ -85,6 +100,7 @@ function Athlete() {
     setEditingAthlete(null);
     setFormData({ name: '', team: '', age: '', sport: '', school: '' });
     setIsFormOpen(true);
+    setSelectedAthlete(null);
   };
 
   const handleSearchChange = (e) => {
@@ -112,13 +128,41 @@ function Athlete() {
     setShowSuggestions(false);
   };
 
-  // Filter athletes based on search query
+  const handleViewDetails = (athlete) => {
+    setSelectedAthlete(athlete);
+  };
+
   const filteredAthletes = athletes.filter(athlete => 
     athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     athlete.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
     athlete.sport.toLowerCase().includes(searchQuery.toLowerCase()) ||
     athlete.school.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ).map(athlete => ({
+    ...athlete,
+    actions: (
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          onClick={() => handleViewDetails(athlete)}
+        >
+          View Details
+        </button>
+        <button
+          onClick={() => handleEdit(athlete)}
+          className="inline-flex items-center justify-center rounded-lg bg-orange-50 p-2 text-orange-600 hover:bg-orange-100 transition-all duration-200"
+        >
+          <PencilSquareIcon className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => handleDelete(athlete)}
+          className="inline-flex items-center justify-center rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100 transition-all duration-200"
+        >
+          <TrashIcon className="h-5 w-5" />
+        </button>
+      </div>
+    )
+  }));
 
   return (
     <div className="space-y-6">
@@ -140,7 +184,6 @@ function Athlete() {
         </div>
       </div>
 
-      {/* Search Bar with Autocomplete */}
       <div className="relative" ref={searchRef}>
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -154,7 +197,6 @@ function Athlete() {
           onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
         />
         
-        {/* Suggestions Dropdown */}
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm max-h-60">
             {suggestions.map((athlete) => (
@@ -269,6 +311,14 @@ function Athlete() {
           </form>
         </div>
       )}
+
+      <AthleteDetailCard 
+        athlete={selectedAthlete} 
+        onClose={() => setSelectedAthlete(null)} 
+        onEdit={handleEdit} 
+        onDelete={handleDelete} 
+        show={showDetailCard}
+      />
 
       <Table
         columns={columns}
