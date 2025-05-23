@@ -15,6 +15,7 @@ const navigation = [
   { name: 'Team', href: '/team', icon: UsersIcon },
   { name: 'Athlete', href: '/athlete', icon: UserGroupIcon },
   { name: 'Coach', href: '/coach', icon: UserIcon },
+  { name: 'School', href: '/school', icon: HomeIcon },
 ];
 
 function SidebarLayout({ onLogout }) {

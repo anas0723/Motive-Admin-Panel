@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Team from './pages/Team';
 import Athlete from './pages/Athlete';
 import Coach from './pages/Coach';
+import School from './pages/School';
 import SidebarLayout from './layouts/SidebarLayout'
 import './App.css'
 
@@ -67,6 +68,7 @@ function App() {
           <Route path="team" element={<Team />} />
           <Route path="athlete" element={<Athlete />} />
           <Route path="coach" element={<Coach />} />
+          <Route path="school" element={<School />} />
           <Route index element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>
