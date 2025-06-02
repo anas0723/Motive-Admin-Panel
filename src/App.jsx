@@ -7,6 +7,8 @@ import Athlete from './pages/Athlete';
 import Coach from './pages/Coach';
 import School from './pages/School';
 import SidebarLayout from './layouts/SidebarLayout'
+import { AthletesProvider } from './context/AthletesContext';
+import { SchoolsProvider } from './context/SchoolsContext';
 import './App.css'
 
 function App() {
@@ -43,35 +45,39 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        <Route 
-          path="/login" 
-          element={
-            !isAuthenticated ? (
-              <Login onLogin={handleLogin} />
-            ) : (
-              <Navigate to="/dashboard" replace />
-            )
-          } 
-        />
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <SidebarLayout onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        >
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="team" element={<Team />} />
-          <Route path="athlete" element={<Athlete />} />
-          <Route path="coach" element={<Coach />} />
-          <Route path="school" element={<School />} />
-          <Route index element={<Navigate to="/dashboard" replace />} />
-        </Route>
-      </Routes>
+      <SchoolsProvider>
+        <AthletesProvider>
+          <Routes>
+            <Route 
+              path="/login" 
+              element={
+                !isAuthenticated ? (
+                  <Login onLogin={handleLogin} />
+                ) : (
+                  <Navigate to="/dashboard" replace />
+                )
+              } 
+            />
+            <Route
+              path="/"
+              element={
+                isAuthenticated ? (
+                  <SidebarLayout onLogout={handleLogout} />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            >
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="team" element={<Team />} />
+              <Route path="athlete" element={<Athlete />} />
+              <Route path="coach" element={<Coach />} />
+              <Route path="school" element={<School />} />
+              <Route index element={<Navigate to="/dashboard" replace />} />
+            </Route>
+          </Routes>
+        </AthletesProvider>
+      </SchoolsProvider>
     </Router>
   );
 }

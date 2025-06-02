@@ -1,5 +1,6 @@
 import { UsersIcon, UserGroupIcon, UserIcon, ChartBarIcon, TrophyIcon, FireIcon, HeartIcon, ClockIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
+import { useAthletes } from '../context/AthletesContext';
 
 const stats = [
   { name: 'Active Athletes', value: '48', icon: UserGroupIcon, change: '+8', changeType: 'increase', color: 'from-blue-500 to-blue-600' },
@@ -16,6 +17,7 @@ const recentActivities = [
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { athletes } = useAthletes();
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -54,7 +56,7 @@ function Dashboard() {
 
   const summaryCards = [
     { title: 'Total Teams', value: '3', icon: UserGroupIcon },
-    { title: 'Total Athletes', value: '15', icon: UsersIcon },
+    { title: 'Total Athletes', value: athletes.length.toString(), icon: UsersIcon },
     { title: 'Total Coaches', value: '5', icon: AcademicCapIcon },
     { title: 'Total Schools', value: '20', icon: AcademicCapIcon },
   ];

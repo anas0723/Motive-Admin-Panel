@@ -3,6 +3,8 @@ import Table from '../components/Table';
 import { MagnifyingGlassIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import CoachDetailCard from '../components/CoachDetailCard';
 import { initialTeams } from './Team'; // Import initialTeams
+import SchoolSelect from '../components/SchoolSelect';
+import SchoolDropdown from '../components/SchoolDropdown';
 
 const initialCoaches = [
   { id: 1, name: 'Sarah Wilson', teamName: 'Team Alpha', experience: '10 years', specialization: 'Running', school: 'Central High School' },
@@ -221,12 +223,12 @@ function Coach() {
 
       {isFormOpen && (
         <div className="mt-8 bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">{editingCoach ? 'Edit Coach' : 'Add New Coach'}</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Name
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">{editingCoach ? 'Edit Coach' : 'Add New Coach'}</h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="mb-4">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Coach Name
                 </label>
                 <input
                   type="text"
@@ -234,32 +236,26 @@ function Coach() {
                   id="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 py-2 px-3 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="teamName" className="block text-sm font-medium text-gray-700">
-                  Team
+              <div className="mb-4">
+                <label htmlFor="teamName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Team Name
                 </label>
-                <select
+                <input
+                  type="text"
                   name="teamName"
                   id="teamName"
                   value={formData.teamName}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 py-2 px-3 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   required
-                >
-                  <option value="">Select a Team</option>
-                  {teams.map(team => (
-                    <option key={team.id} value={team.name}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
-              <div>
-                <label htmlFor="experience" className="block text-sm font-medium text-gray-700">
+              <div className="mb-4">
+                <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-1">
                   Experience
                 </label>
                 <input
@@ -268,12 +264,12 @@ function Coach() {
                   id="experience"
                   value={formData.experience}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 py-2 px-3 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="specialization" className="block text-sm font-medium text-gray-700">
+              <div className="mb-4">
+                <label htmlFor="specialization" className="block text-sm font-medium text-gray-700 mb-1">
                   Specialization
                 </label>
                 <input
@@ -282,36 +278,30 @@ function Coach() {
                   id="specialization"
                   value={formData.specialization}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 py-2 px-3 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="school" className="block text-sm font-medium text-gray-700">
-                  School
-                </label>
-                <input
-                  type="text"
-                  name="school"
-                  id="school"
+              <div className="mb-4">
+                <SchoolDropdown
                   value={formData.school}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  label="School"
                   required
                 />
               </div>
             </div>
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-3">
               <button
                 type="button"
-                className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 onClick={() => setIsFormOpen(false)}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               >
                 {editingCoach ? 'Update Coach' : 'Add Coach'}
               </button>
