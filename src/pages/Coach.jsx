@@ -204,18 +204,6 @@ function Coach() {
         >
           View Details
         </button>
-         <button
-          onClick={() => handleEdit(coach)}
-          className="inline-flex items-center justify-center rounded-lg bg-orange-50 p-2 text-orange-600 hover:bg-orange-100 transition-all duration-200"
-        >
-          <PencilSquareIcon className="h-5 w-5" />
-        </button>
-        <button
-          onClick={() => handleDelete(coach)}
-          className="inline-flex items-center justify-center rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100 transition-all duration-200"
-        >
-          <TrashIcon className="h-5 w-5" />
-        </button>
       </div>
     )
   }));
