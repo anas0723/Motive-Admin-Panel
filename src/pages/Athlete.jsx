@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
 import Table from '../components/Table';
 import { useAthletes } from '../context/AthletesContext';
 import { useSchools } from '../context/SchoolsContext';
@@ -6,16 +7,20 @@ import AthleteDetailCard from '../components/AthleteDetailCard';
 import SchoolSearch from '../components/SchoolSearch';
 import SchoolSelect from '../components/SchoolSelect';
 import SchoolDropdown from '../components/SchoolDropdown';
+import ProfilePictureUploader from '../components/ProfilePictureUploader';
+import SportCategoryDropdown from '../components/SportCategoryDropdown';
 
 // Initial athletes data
 export const initialAthletes = [
-  { id: 1, name: 'John Doe', age: 25, sport: 'Running', team: 'Team Alpha', school: 'Lincoln High School' },
-  { id: 2, name: 'Jane Smith', age: 22, sport: 'Swimming', team: 'Team Beta', school: 'Washington Academy' },
-  { id: 3, name: 'Mike Johnson', age: 28, sport: 'Cycling', team: 'Team Alpha', school: 'Roosevelt High School' },
+  { id: 1, name: 'John Doe', age: 25, sport: 'Running', team: 'Team Alpha', school: 'Lincoln High School', email: 'john.doe@example.com', phone: '555-1234', profilePicture: 'https://randomuser.me/api/portraits/men/1.jpg' },
+  { id: 2, name: 'Jane Smith', age: 22, sport: 'Swimming', team: 'Team Beta', school: 'Washington Academy', email: 'jane.smith@example.com', phone: '555-5678', profilePicture: 'https://randomuser.me/api/portraits/women/2.jpg' },
+  { id: 3, name: 'Mike Johnson', age: 28, sport: 'Cycling', team: 'Team Alpha', school: 'Roosevelt High School', email: 'mike.johnson@example.com', phone: '555-9012', profilePicture: 'https://randomuser.me/api/portraits/men/3.jpg' },
 ];
 
 const athleteColumns = [
   { key: 'name', label: 'Athlete Name' },
+  { key: 'email', label: 'Email Address' },
+  { key: 'phone', label: 'Phone Number' },
   { key: 'age', label: 'Age' },
   { key: 'sport', label: 'Sport' },
   { key: 'team', label: 'Team' },
@@ -35,23 +40,58 @@ function Athlete() {
     sport: '',
     team: '',
     school: '',
+    email: '',
+    phone: '',
+    profilePicture: null,
+    profilePicturePreview: '',
   });
 
   const handleInputChange = (e) => {
-    const value = e.target.name === 'age' ? parseInt(e.target.value) || '' : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
+    const { name, value, type, files } = e.target;
+
+    if (type !== 'file') { // Handle non-file inputs
+      const newValue = name === 'age' ? parseInt(value) || '' : value;
+      setFormData({ ...formData, [name]: newValue });
+    }
+    // File input is handled by ProfilePictureUploader
   };
+
+   const handleProfilePictureSelect = (file) => {
+    if (file) {
+      setFormData({ 
+        ...formData, 
+        profilePicture: file, 
+        profilePicturePreview: URL.createObjectURL(file)
+      });
+    } else {
+       setFormData({ 
+        ...formData, 
+        profilePicture: null, 
+        profilePicturePreview: ''
+      });
+    }
+  };
+
+   const handleProfilePictureRemove = () => {
+    setFormData({ 
+      ...formData, 
+      profilePicture: null, 
+      profilePicturePreview: ''
+    });
+  };
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingAthlete) {
       setAthletes(athletes.map(athlete =>
-        athlete.id === editingAthlete.id ? { ...formData, id: editingAthlete.id } : athlete
+        athlete.id === editingAthlete.id ? { ...athlete, ...formData, id: editingAthlete.id } : athlete
       ));
     } else {
       setAthletes([...athletes, { ...formData, id: athletes.length + 1 }]);
     }
-    setFormData({ name: '', age: '', sport: '', team: '', school: '' });
+    // Reset form data and close modal
+    setFormData({ name: '', age: '', sport: '', team: '', school: '', email: '', phone: '', profilePicture: null, profilePicturePreview: '' });
     setEditingAthlete(null);
     setIsFormOpen(false);
   };
@@ -64,6 +104,10 @@ function Athlete() {
       sport: athlete.sport,
       team: athlete.team,
       school: athlete.school,
+      email: athlete.email,
+      phone: athlete.phone,
+      profilePicture: null,
+      profilePicturePreview: athlete.profilePicture,
     });
     setIsFormOpen(true);
   };
@@ -76,7 +120,7 @@ function Athlete() {
 
   const handleAddNewClick = () => {
     setEditingAthlete(null);
-    setFormData({ name: '', age: '', sport: '', team: '', school: '' });
+    setFormData({ name: '', age: '', sport: '', team: '', school: '', email: '', phone: '', profilePicture: null, profilePicturePreview: '' });
     setIsFormOpen(true);
   };
 
@@ -86,8 +130,8 @@ function Athlete() {
   };
 
   const handleEditAthlete = (athlete) => {
-    setEditingAthlete(athlete);
-    setSelectedAthlete(null);
+    handleEdit(athlete); // Open form modal for editing
+    setSelectedAthlete(null); // Close detail card
     setShowDetailCard(false);
   };
 
@@ -97,6 +141,12 @@ function Athlete() {
       setSelectedAthlete(null);
       setShowDetailCard(false);
     }
+  };
+
+  const handleCloseModal = () => {
+    setIsFormOpen(false);
+    setEditingAthlete(null);
+    setFormData({ name: '', age: '', sport: '', team: '', school: '', email: '', phone: '', profilePicture: null, profilePicturePreview: '' });
   };
 
   // Filter athletes based on selected school
@@ -128,93 +178,154 @@ function Athlete() {
         <SchoolSearch className="max-w-md" />
       </div>
 
-      {isFormOpen && (
-        <div className="mt-8 bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">{editingAthlete ? 'Edit Athlete' : 'Add New Athlete'}</h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div className="mb-4">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Athlete Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="block w-full rounded-md border-gray-300 py-2 px-3 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-1">
-                  Age
-                </label>
-                <input
-                  type="number"
-                  name="age"
-                  id="age"
-                  value={formData.age}
-                  onChange={handleInputChange}
-                  className="block w-full rounded-md border-gray-300 py-2 px-3 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="sport" className="block text-sm font-medium text-gray-700 mb-1">
-                  Sport
-                </label>
-                <input
-                  type="text"
-                  name="sport"
-                  id="sport"
-                  value={formData.sport}
-                  onChange={handleInputChange}
-                  className="block w-full rounded-md border-gray-300 py-2 px-3 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="team" className="block text-sm font-medium text-gray-700 mb-1">
-                  Team
-                </label>
-                <input
-                  type="text"
-                  name="team"
-                  id="team"
-                  value={formData.team}
-                  onChange={handleInputChange}
-                  className="block w-full rounded-md border-gray-300 py-2 px-3 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div className="mb-4">
-                <SchoolDropdown
-                  value={formData.school}
-                  onChange={handleInputChange}
-                  label="School"
-                  required
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                onClick={() => setIsFormOpen(false)}
+      {/* Athlete Form Modal */}
+      <Transition appear show={isFormOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-10" onClose={handleCloseModal}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              >
-                {editingAthlete ? 'Update Athlete' : 'Add Athlete'}
-              </button>
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                    {editingAthlete ? 'Edit Athlete' : 'Add New Athlete'}
+                  </Dialog.Title>
+                  <div className="mt-2">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div className="grid grid-cols-1 gap-4">
+                        {/* Form fields */}
+                         <div className="">
+                          <ProfilePictureUploader
+                            initialImageUrl={formData.profilePicturePreview}
+                            onFileSelect={handleProfilePictureSelect}
+                             onImageRemove={handleProfilePictureRemove}
+                          />
+                        </div>
+                        <div className="">
+                          <label htmlFor="name" className="block text-sm font-medium text-gray-800 mb-1">
+                            Athlete Name
+                          </label>
+                          <input
+                            type="text"
+                            name="name"
+                            id="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            className="input-primary"
+                            required
+                          />
+                        </div>
+                        <div className="">
+                          <label htmlFor="email" className="block text-sm font-medium text-gray-800 mb-1">
+                            Email Address
+                          </label>
+                          <input
+                            type="email"
+                            name="email"
+                            id="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            className="input-primary"
+                            required
+                          />
+                        </div>
+                        <div className="">
+                          <label htmlFor="phone" className="block text-sm font-medium text-gray-800 mb-1">
+                            Phone Number
+                          </label>
+                          <input
+                            type="tel"
+                            name="phone"
+                            id="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange}
+                            className="input-primary"
+                          />
+                        </div>
+                        <div className="">
+                           <SportCategoryDropdown
+                            value={formData.sport}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="">
+                          <label htmlFor="age" className="block text-sm font-medium text-gray-800 mb-1">
+                            Age
+                          </label>
+                          <input
+                            type="number"
+                            name="age"
+                            id="age"
+                            value={formData.age}
+                            onChange={handleInputChange}
+                            className="input-primary"
+                            required
+                          />
+                        </div>
+                        <div className="">
+                          <label htmlFor="team" className="block text-sm font-medium text-gray-800 mb-1">
+                            Team
+                          </label>
+                          <input
+                            type="text"
+                            name="team"
+                            id="team"
+                            value={formData.team}
+                            onChange={handleInputChange}
+                            className="input-primary"
+                          />
+                        </div>
+                        <div className="">
+                          <SchoolDropdown
+                            value={formData.school}
+                            onChange={handleInputChange}
+                            label="School"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex justify-end space-x-3">
+                        <button
+                          type="button"
+                          className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                          onClick={handleCloseModal}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        >
+                          {editingAthlete ? 'Update Athlete' : 'Add Athlete'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
             </div>
-          </form>
-        </div>
-      )}
+          </div>
+        </Dialog>
+      </Transition>
 
       <div className="mt-8 flex flex-col">
         <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -222,8 +333,8 @@ function Athlete() {
             <Table
               columns={athleteColumns}
               data={filteredAthletes}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              onEdit={handleEditAthlete}
+              onDelete={handleDeleteAthlete}
               onRowClick={handleViewAthleteDetails}
             />
           </div>

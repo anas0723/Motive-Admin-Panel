@@ -20,6 +20,13 @@ function AthleteDetailCard({
         </div>
         
         <div className="p-6 text-sm text-gray-700 space-y-3">
+          {athlete?.profilePicture && (
+            <div className="flex justify-center mb-4">
+              <img src={athlete.profilePicture} alt={`${athlete.name}'s profile`} className="w-24 h-24 rounded-full object-cover" />
+            </div>
+          )}
+          <p><strong className="font-semibold">Email:</strong> {athlete?.email}</p>
+          <p><strong className="font-semibold">Phone:</strong> {athlete?.phone}</p>
           <p><strong className="font-semibold">Team:</strong> {athlete?.team}</p>
           <p><strong className="font-semibold">Age:</strong> {athlete?.age}</p>
           <p><strong className="font-semibold">Sport:</strong> {athlete?.sport}</p>

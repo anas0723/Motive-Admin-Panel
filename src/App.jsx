@@ -9,7 +9,6 @@ import School from './pages/School';
 import SidebarLayout from './layouts/SidebarLayout'
 import { AthletesProvider } from './context/AthletesContext';
 import { SchoolsProvider } from './context/SchoolsContext';
-import './App.css'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
