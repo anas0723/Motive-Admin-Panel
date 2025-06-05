@@ -1,8 +1,15 @@
+import { useState, useEffect } from 'react';
+import Card from '../components/ui/Card';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from 'recharts';
 import { UsersIcon, UserGroupIcon, UserIcon, ChartBarIcon, TrophyIcon, FireIcon, HeartIcon, ClockIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { useAthletes } from '../context/AthletesContext';
 
-const stats = [
+// Rename this to statsData to avoid naming conflict
+const statsData = [
   { name: 'Active Athletes', value: '48', icon: UserGroupIcon, change: '+8', changeType: 'increase', color: 'from-blue-500 to-blue-600' },
   { name: 'Workouts Completed', value: '156', icon: FireIcon, change: '+23', changeType: 'increase', color: 'from-orange-500 to-orange-600' },
   { name: 'Success Rate', value: '92%', icon: TrophyIcon, change: '+5%', changeType: 'increase', color: 'from-yellow-500 to-yellow-600' },
@@ -61,17 +68,41 @@ function Dashboard() {
     { title: 'Total Schools', value: '20', icon: AcademicCapIcon },
   ];
 
+  // Mock data
+  const [stats, setStats] = useState({
+    totalAthletes: 156,
+    totalCoaches: 23,
+    totalTeams: 12,
+    totalSchools: 8,
+  });
+
+  const athletesPerTeam = [
+    { name: 'Team A', count: 25 },
+    { name: 'Team B', count: 18 },
+    { name: 'Team C', count: 32 },
+    { name: 'Team D', count: 15 },
+  ];
+
+  const sportsDistribution = [
+    { name: 'Basketball', value: 40 },
+    { name: 'Football', value: 30 },
+    { name: 'Swimming', value: 20 },
+    { name: 'Track', value: 10 },
+  ];
+
+  const COLORS = ['#0ea5e9', '#d946ef', '#22c55e', '#f59e0b'];
+
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-primary-600 to-primary-400 rounded-2xl p-6 text-white">
         <h1 className="text-2xl font-bold text-amber-600">Welcome to MOTIVE</h1>
-        <p className="mt-1  text-amber-600">
+        <p className="mt-1 text-amber-600">
           Track, train, and transform with your athletes
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {statsData.map((stat) => (
           <div
             key={stat.name}
             className="relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5 transition-all duration-200 hover:shadow-md"
@@ -126,11 +157,73 @@ function Dashboard() {
                 onClick={action.onClick}
               >
                 <span className="block text-base font-semibold text-gray-900">{action.name}</span>
-                {/* <span className="block text-sm text-gray-600 mt-1">{action.description}</span> */}
               </button>
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white">
+          <h3 className="text-lg font-medium">Total Athletes</h3>
+          <p className="text-3xl font-bold mt-2">{stats.totalAthletes}</p>
+        </Card>
+        <Card className="bg-gradient-to-br from-secondary-500 to-secondary-600 text-white">
+          <h3 className="text-lg font-medium">Total Coaches</h3>
+          <p className="text-3xl font-bold mt-2">{stats.totalCoaches}</p>
+        </Card>
+        <Card className="bg-gradient-to-br from-success-500 to-success-600 text-white">
+          <h3 className="text-lg font-medium">Total Teams</h3>
+          <p className="text-3xl font-bold mt-2">{stats.totalTeams}</p>
+        </Card>
+        <Card className="bg-gradient-to-br from-warning-500 to-warning-600 text-white">
+          <h3 className="text-lg font-medium">Total Schools</h3>
+          <p className="text-3xl font-bold mt-2">{stats.totalSchools}</p>
+        </Card>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <h3 className="text-lg font-medium mb-4">Athletes per Team</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={athletesPerTeam}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#0ea5e9" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card>
+          <h3 className="text-lg font-medium mb-4">Sports Distribution</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={sportsDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {sportsDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
       </div>
     </div>
   );

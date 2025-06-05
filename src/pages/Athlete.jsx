@@ -111,11 +111,14 @@ function Athlete() {
       profilePicturePreview: athlete.profilePicture,
     });
     setIsFormOpen(true);
+    setSelectedAthlete(null);
   };
 
-  const handleDelete = (athleteToDelete) => {
-    if (window.confirm(`Are you sure you want to delete ${athleteToDelete.name}?`)) {
-      setAthletes(athletes.filter(athlete => athlete.id !== athleteToDelete.id));
+  const handleDelete = (athlete) => {
+    if (window.confirm(`Are you sure you want to delete ${athlete.name}?`)) {
+      setAthletes(athletes.filter(a => a.id !== athlete.id));
+      setSelectedAthlete(null);
+      setShowDetailCard(false);
     }
   };
 
@@ -151,31 +154,37 @@ function Athlete() {
   };
 
   // Filter athletes based on selected school and add actions button
-  const filteredAthletes = selectedSchool
-    ? athletes.filter(athlete => athlete.school === selectedSchool.name).map(athlete => ({
-      ...athlete,
-      actions: (
+  const filteredAthletes = (selectedSchool
+    ? athletes.filter(athlete => athlete.school === selectedSchool.name)
+    : athletes
+  ).map(athlete => ({
+    ...athlete,
+    actions: (
+      <div className="flex justify-end gap-2">
         <button
           type="button"
-          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           onClick={() => handleViewAthleteDetails(athlete)}
         >
           View Details
         </button>
-      )
-    }))
-    : athletes.map(athlete => ({
-      ...athlete,
-      actions: (
         <button
           type="button"
-          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-          onClick={() => handleViewAthleteDetails(athlete)}
+          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          onClick={() => handleEdit(athlete)}
         >
-          View Details
+          Edit
         </button>
-      )
-    }));
+        <button
+          type="button"
+          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-red-600 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          onClick={() => handleDelete(athlete)}
+        >
+          Delete
+        </button>
+      </div>
+    )
+  }));
 
   return (
     <div className="space-y-6">

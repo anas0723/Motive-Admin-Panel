@@ -9,13 +9,13 @@ const Button = ({
   icon: Icon,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
   
   const variants = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
-    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500',
-    accent: 'bg-cyan-500 text-white hover:bg-cyan-600 focus:ring-cyan-400',
-    outline: 'border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500',
+    primary: 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 focus:ring-primary-500',
+    secondary: 'bg-gradient-to-r from-secondary-500 to-secondary-600 text-white hover:from-secondary-600 hover:to-secondary-700 focus:ring-secondary-500',
+    outline: 'border-2 border-primary-500 text-primary-500 hover:bg-primary-50 focus:ring-primary-500',
+    ghost: 'text-primary-500 hover:bg-primary-50 focus:ring-primary-500',
   };
 
   const sizes = {
@@ -26,13 +26,7 @@ const Button = ({
 
   return (
     <button
-      className={twMerge(
-        baseStyles,
-        variants[variant],
-        sizes[size],
-        Icon && 'gap-2',
-        className
-      )}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {Icon && <Icon className="w-5 h-5" />}
