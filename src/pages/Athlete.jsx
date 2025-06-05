@@ -25,6 +25,7 @@ const athleteColumns = [
   { key: 'sport', label: 'Sport' },
   { key: 'team', label: 'Team' },
   { key: 'school', label: 'School' },
+  { key: 'actions', label: 'Actions' },
 ];
 
 function Athlete() {
@@ -149,10 +150,32 @@ function Athlete() {
     setFormData({ name: '', age: '', sport: '', team: '', school: '', email: '', phone: '', profilePicture: null, profilePicturePreview: '' });
   };
 
-  // Filter athletes based on selected school
+  // Filter athletes based on selected school and add actions button
   const filteredAthletes = selectedSchool
-    ? athletes.filter(athlete => athlete.school === selectedSchool.name)
-    : athletes;
+    ? athletes.filter(athlete => athlete.school === selectedSchool.name).map(athlete => ({
+      ...athlete,
+      actions: (
+        <button
+          type="button"
+          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+          onClick={() => handleViewAthleteDetails(athlete)}
+        >
+          View Details
+        </button>
+      )
+    }))
+    : athletes.map(athlete => ({
+      ...athlete,
+      actions: (
+        <button
+          type="button"
+          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+          onClick={() => handleViewAthleteDetails(athlete)}
+        >
+          View Details
+        </button>
+      )
+    }));
 
   return (
     <div className="space-y-6">
