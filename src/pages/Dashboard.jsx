@@ -1,30 +1,106 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Card from '../components/ui/Card';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell
+  PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import { UsersIcon, UserGroupIcon, UserIcon, ChartBarIcon, TrophyIcon, FireIcon, HeartIcon, ClockIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { useAthletes } from '../context/AthletesContext';
-
-// Rename this to statsData to avoid naming conflict
-const statsData = [
-  { name: 'Active Athletes', value: '48', icon: UserGroupIcon, change: '+8', changeType: 'increase', color: 'from-blue-500 to-blue-600' },
-  { name: 'Workouts Completed', value: '156', icon: FireIcon, change: '+23', changeType: 'increase', color: 'from-orange-500 to-orange-600' },
-  { name: 'Success Rate', value: '92%', icon: TrophyIcon, change: '+5%', changeType: 'increase', color: 'from-yellow-500 to-yellow-600' },
-  { name: 'Avg. Performance', value: '8.5', icon: HeartIcon, change: '+0.3', changeType: 'increase', color: 'from-red-500 to-red-600' },
-];
-
-const recentActivities = [
-  { type: 'workout', name: 'John Doe', action: 'completed a HIIT session', time: '2 hours ago', icon: FireIcon },
-  { type: 'achievement', name: 'Sarah Smith', action: 'reached a new personal best', time: '3 hours ago', icon: TrophyIcon },
-  { type: 'training', name: 'Mike Johnson', action: 'started a new training program', time: '5 hours ago', icon: ClockIcon },
-];
+import { useSchools } from '../context/SchoolsContext';
+import { getAllAthletes, getAllCoaches, getAllTeams } from '../data/mockDataGenerator';
 
 function Dashboard() {
   const navigate = useNavigate();
   const { athletes } = useAthletes();
+  const { schools } = useSchools();
+
+  // Calculate dashboard statistics from mock data
+  const dashboardStats = useMemo(() => {
+    const allAthletes = getAllAthletes({ schools });
+    const allTeams = getAllTeams({ schools });
+    const allCoaches = getAllCoaches({ schools });
+
+    const totalAthletes = allAthletes.length;
+    const avgPerformance = allAthletes.reduce((sum, athlete) => 
+      sum + (athlete.performance.strength + athlete.performance.speed + athlete.performance.endurance + athlete.performance.agility) / 4, 0
+    ) / totalAthletes;
+    
+    const avgAttendance = allAthletes.reduce((sum, athlete) => 
+      sum + athlete.performance.attendance, 0
+    ) / totalAthletes;
+
+    const positiveProgress = allAthletes.filter(a => a.performance.recentProgress > 0).length;
+    const progressRate = (positiveProgress / totalAthletes) * 100;
+
+    return [
+      { 
+        name: 'Active Athletes', 
+        value: totalAthletes, 
+        icon: UserGroupIcon, 
+        change: '+12', 
+        changeType: 'increase', 
+        color: 'from-blue-500 to-blue-600' 
+      },
+      { 
+        name: 'Teams', 
+        value: allTeams.length, 
+        icon: UserIcon, 
+        change: '+3', 
+        changeType: 'increase', 
+        color: 'from-green-500 to-green-600' 
+      },
+      { 
+        name: 'Avg. Attendance', 
+        value: `${Math.round(avgAttendance)}%`, 
+        icon: ClockIcon, 
+        change: '+5%', 
+        changeType: 'increase', 
+        color: 'from-yellow-500 to-yellow-600' 
+      },
+      { 
+        name: 'Progress Rate', 
+        value: `${Math.round(progressRate)}%`, 
+        icon: ChartBarIcon, 
+        change: '+8%', 
+        changeType: 'increase', 
+        color: 'from-purple-500 to-purple-600' 
+      },
+    ];
+  }, [schools]);
+
+  // Performance data for charts
+  const performanceData = useMemo(() => {
+    const allAthletes = getAllAthletes({ schools });
+    return allAthletes.map(athlete => ({
+      name: athlete.name.split(' ')[0],
+      performance: (
+        athlete.performance.strength +
+        athlete.performance.speed +
+        athlete.performance.endurance +
+        athlete.performance.agility
+      ) / 4,
+      attendance: athlete.performance.attendance,
+      progress: athlete.performance.recentProgress
+    })).slice(0, 10); // Show top 10 athletes
+  }, [schools]);
+
+  // Recent activities based on mock data
+  const recentActivities = useMemo(() => {
+    const allAthletes = getAllAthletes({ schools });
+    return allAthletes
+      .filter(athlete => athlete.performance.recentProgress !== 0)
+      .map(athlete => ({
+        type: athlete.performance.recentProgress > 0 ? 'achievement' : 'training',
+        name: athlete.name,
+        action: athlete.performance.recentProgress > 0 
+          ? 'improved overall performance'
+          : 'started new training program',
+        time: '2 hours ago',
+        icon: athlete.performance.recentProgress > 0 ? TrophyIcon : ClockIcon
+      }))
+      .slice(0, 5); // Show last 5 activities
+  }, [schools]);
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -94,139 +170,127 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-primary-600 to-primary-400 rounded-2xl p-6 text-white">
-        <h1 className="text-2xl font-bold text-amber-600">Welcome to MOTIVE</h1>
-        <p className="mt-1 text-amber-600">
-          Track, train, and transform with your athletes
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {statsData.map((stat) => (
-          <div
-            key={stat.name}
-            className="relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5 transition-all duration-200 hover:shadow-md"
-          >
-            <dt>
-              <div className={`absolute rounded-lg bg-gradient-to-r ${stat.color} p-3 text-white`}>
-                <stat.icon className="h-6 w-6" aria-hidden="true" />
-              </div>
-              <p className="ml-16 truncate text-sm font-medium text-gray-500">{stat.name}</p>
-            </dt>
-            <dd className="ml-16 flex items-baseline">
-              <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
-              <p
-                className={`ml-2 flex items-baseline text-sm font-semibold ${
-                  stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {stat.change}
-              </p>
-            </dd>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-          <h2 className="text-base font-semibold leading-7 text-gray-900">Recent Activity</h2>
-          <div className="mt-6 space-y-4">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-center gap-x-4">
-                <div className={`h-10 w-10 rounded-full bg-gradient-to-r ${activity.type === 'workout' ? 'from-orange-500 to-orange-600' : activity.type === 'achievement' ? 'from-yellow-500 to-yellow-600' : 'from-blue-500 to-blue-600'} flex items-center justify-center text-white`}>
-                  <activity.icon className="h-6 w-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    <span className="font-semibold">{activity.name}</span> {activity.action}
-                  </p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-          <h2 className="text-base font-semibold leading-7 text-gray-900">Quick Actions</h2>
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {quickActions.map((action) => (
-              <button
-                key={action.name}
-                className={`relative block w-full rounded-lg bg-white p-6 text-center shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-${action.color}-500 focus:ring-offset-2 border-t-4 border-${action.color}-500`}
-                onClick={action.onClick}
-              >
-                <span className="block text-base font-semibold text-gray-900">{action.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white">
-          <h3 className="text-lg font-medium">Total Athletes</h3>
-          <p className="text-3xl font-bold mt-2">{stats.totalAthletes}</p>
-        </Card>
-        <Card className="bg-gradient-to-br from-secondary-500 to-secondary-600 text-white">
-          <h3 className="text-lg font-medium">Total Coaches</h3>
-          <p className="text-3xl font-bold mt-2">{stats.totalCoaches}</p>
-        </Card>
-        <Card className="bg-gradient-to-br from-success-500 to-success-600 text-white">
-          <h3 className="text-lg font-medium">Total Teams</h3>
-          <p className="text-3xl font-bold mt-2">{stats.totalTeams}</p>
-        </Card>
-        <Card className="bg-gradient-to-br from-warning-500 to-warning-600 text-white">
-          <h3 className="text-lg font-medium">Total Schools</h3>
-          <p className="text-3xl font-bold mt-2">{stats.totalSchools}</p>
-        </Card>
+        {dashboardStats.map((stat) => (
+          <Card key={stat.name} className="relative overflow-hidden">
+            <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-r opacity-10 pointer-events-none" />
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className={`rounded-lg p-3 bg-gradient-to-br ${stat.color}`}>
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4 flex-1">
+                  <h3 className="text-sm font-medium text-gray-900">{stat.name}</h3>
+                  <p className="mt-1 text-2xl font-semibold text-gray-900">{stat.value}</p>
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center">
+                  <div className={`text-sm ${
+                    stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {stat.change}
+                  </div>
+                  <span className="ml-2 text-sm text-gray-500">from last month</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <h3 className="text-lg font-medium mb-4">Athletes per Team</h3>
+        {/* Performance Distribution */}
+        <Card className="p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Distribution</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={athletesPerTeam}>
+              <BarChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="count" fill="#0ea5e9" />
+                <Bar dataKey="performance" fill="#3b82f6" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card>
-          <h3 className="text-lg font-medium mb-4">Sports Distribution</h3>
+        {/* Progress Tracking */}
+        <Card className="p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Progress Tracking</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={sportsDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {sportsDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
+              <LineChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
                 <Tooltip />
-              </PieChart>
+                <Line type="monotone" dataKey="progress" stroke="#8b5cf6" strokeWidth={2} />
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </Card>
+      </div>
+
+      {/* Recent Activities */}
+      <Card className="p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activities</h3>
+        <div className="flow-root">
+          <ul className="-mb-8">
+            {recentActivities.map((activity, index) => (
+              <li key={index}>
+                <div className="relative pb-8">
+                  {index < recentActivities.length - 1 && (
+                    <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
+                  )}
+                  <div className="relative flex space-x-3">
+                    <div className={`${
+                      activity.type === 'achievement' ? 'bg-yellow-100' : 'bg-blue-100'
+                    } h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white`}>
+                      <activity.icon className={`h-5 w-5 ${
+                        activity.type === 'achievement' ? 'text-yellow-600' : 'text-blue-600'
+                      }`} />
+                    </div>
+                    <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                      <div>
+                        <p className="text-sm text-gray-500">
+                          <span className="font-medium text-gray-900">{activity.name}</span>
+                          {' '}{activity.action}
+                        </p>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        <time dateTime={activity.time}>{activity.time}</time>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Card>
+      
+      {/* Quick Actions Moved to Bottom */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {quickActions.map((action) => (
+          <Card 
+            key={action.name}
+            className="p-6 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+            onClick={action.onClick}
+          >
+            <div className={`inline-flex p-3 rounded-lg text-${action.color}-600 bg-${action.color}-100 ring-4 ring-${action.color}-50`}>
+              <action.icon className="h-6 w-6" />
+            </div>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">{action.name}</h3>
+            <p className="mt-1 text-sm text-gray-500">{action.description}</p>
+          </Card>
+        ))}
       </div>
     </div>
   );
 }
 
-export default Dashboard; 
+export default Dashboard;

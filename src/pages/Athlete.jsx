@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useMemo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import Table from '../components/Table';
 import { useAthletes } from '../context/AthletesContext';
@@ -30,11 +30,13 @@ const athleteColumns = [
 
 function Athlete() {
   const { athletes, setAthletes } = useAthletes();
-  const { schools, selectedSchool } = useSchools();
+  const { schools } = useSchools();
   const [selectedAthlete, setSelectedAthlete] = useState(null);
   const [showDetailCard, setShowDetailCard] = useState(false);
   const [editingAthlete, setEditingAthlete] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -152,26 +154,41 @@ function Athlete() {
     setEditingAthlete(null);
     setFormData({ name: '', age: '', sport: '', team: '', school: '', email: '', phone: '', profilePicture: null, profilePicturePreview: '' });
   };
+  // Memoize filtered athletes for better performance
+  const filteredAthletes = useMemo(() => {
+    return athletes.filter(athlete => {
+      // Case-insensitive school comparison
+      const matchesSchool = !selectedSchool || 
+        athlete.school.toLowerCase() === selectedSchool.toLowerCase();
+      const matchesSearch = !searchQuery || 
+        athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        athlete.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        athlete.sport.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSchool && matchesSearch;
+    });
+  }, [athletes, selectedSchool, searchQuery]);
 
-  // Filter athletes based on selected school and add actions button
-  const filteredAthletes = (selectedSchool
-    ? athletes.filter(athlete => athlete.school === selectedSchool.name)
-    : athletes
-  ).map(athlete => ({
-    ...athlete,
-    actions: (
-      <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          onClick={() => handleViewAthleteDetails(athlete)}
-        >
-          View Details
-        </button>
-      
-      </div>
-    )
-  }));
+  // Filter handlers
+  const handleSchoolChange = (e) => {
+    const newValue = e.target.value;
+    console.log('School selected:', newValue);
+    console.log('Athletes before filter:', athletes.length);
+    setSelectedSchool(newValue);
+    const filtered = athletes.filter(athlete => 
+      athlete.school.toLowerCase() === newValue.toLowerCase()
+    );
+    console.log('Athletes after filter:', filtered.length);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Clear filters
+  const handleClearFilters = () => {
+    setSelectedSchool('');
+    setSearchQuery('');
+  };
 
   return (
     <div className="space-y-6">
@@ -191,10 +208,73 @@ function Athlete() {
             Add New Athlete
           </button>
         </div>
+      </div>      {/* Filters */}
+      <div className="mb-6 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="w-full sm:w-64">
+            <SchoolDropdown
+              value={selectedSchool}
+              onChange={handleSchoolChange}
+              label="Filter by School"
+              className="mb-0"
+            />
+          </div>
+
+          <div className="w-full sm:w-96">
+            <label htmlFor="athlete-search" className="block text-sm font-medium text-gray-700 mb-1">
+              Search Athletes
+            </label>
+            <div className="relative rounded-md shadow-sm">
+              <input
+                type="text"
+                id="athlete-search"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="block w-full rounded-md border-gray-300 pl-4 pr-12 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Search by name, team, or sport..."
+              />
+              {searchQuery && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    <span className="sr-only">Clear search</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {(selectedSchool || searchQuery) && (
+          <div className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-md">
+            <div className="text-sm text-gray-600">
+              Showing {filteredAthletes.length} {filteredAthletes.length === 1 ? 'athlete' : 'athletes'}
+              {selectedSchool && ` from ${selectedSchool}`}
+            </div>
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none flex items-center gap-1"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              Clear filters
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="mb-6">
-        <SchoolSearch className="max-w-md" />
+      {/* Results Counter */}
+      <div className="mb-4 text-sm text-gray-600">
+        Showing {filteredAthletes.length} {filteredAthletes.length === 1 ? 'athlete' : 'athletes'}
+        {selectedSchool && ` from ${selectedSchool}`}
       </div>
 
       {/* Athlete Form Modal */}

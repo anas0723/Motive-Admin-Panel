@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Fragment } from 'react';
+import { useState, useRef, useEffect, Fragment, useMemo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import Table from '../components/Table';
 import { MagnifyingGlassIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -49,6 +49,7 @@ function Coach() {
   const [selectedCoach, setSelectedCoach] = useState(null);
   const [showDetailCard, setShowDetailCard] = useState(false);
   const { schools } = useSchools(); // Access schools from context
+  const [selectedSchool, setSelectedSchool] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -108,17 +109,19 @@ function Coach() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const newCoach = {
+      id: editingCoach ? editingCoach.id : Date.now(),
+      ...formData,
+      profilePicture: formData.profilePicturePreview || formData.profilePicture,
+    };
+
     if (editingCoach) {
-      setCoaches(coaches.map(coach =>
-        coach.id === editingCoach.id ? { ...coach, ...formData, id: coach.id } : coach
-      ));
+      setCoaches(coaches.map((coach) => (coach.id === editingCoach.id ? newCoach : coach)));
     } else {
-      setCoaches([...coaches, { ...formData, id: coaches.length + 1 }]);
+      setCoaches([...coaches, newCoach]);
     }
-    // Reset form data and close modal
-    setFormData({ name: '', teamName: '', experience: '', specialization: '', school: '', email: '', phone: '', profilePicture: null, profilePicturePreview: '' });
-    setEditingCoach(null);
-    setIsFormOpen(false);
+
+    handleCloseModal();
   };
 
   const handleEdit = (coach) => {
@@ -184,81 +187,134 @@ function Coach() {
   const handleCloseModal = () => {
     setIsFormOpen(false);
     setEditingCoach(null);
-    setFormData({ name: '', teamName: '', experience: '', specialization: '', school: '', email: '', phone: '', profilePicture: null, profilePicturePreview: '' });
+    setFormData({
+      name: '',
+      teamName: '',
+      experience: '',
+      specialization: '',
+      school: '',
+      email: '',
+      phone: '',
+      profilePicture: null,
+      profilePicturePreview: '',
+    });
   };
 
-  const filteredCoaches = coaches.filter(coach => 
-    coach.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    coach.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    coach.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    coach.school.toLowerCase().includes(searchQuery.toLowerCase())
-  ).map(coach => ({
-    ...coach,
-    school: schools.find(school => school.id === coach.school)?.name || coach.school, // Display school name or ID if not found
-    actions: (
-      <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          onClick={() => handleViewDetails(coach)}
-        >
-          View Details
-        </button>
-      </div>
-    )
-  }));
+  // Memoize filtered coaches for better performance
+  const filteredCoaches = useMemo(() => {
+    return coaches.filter((coach) => {
+      const matchesSchool = !selectedSchool || coach.school.toLowerCase() === selectedSchool.toLowerCase();
+      const matchesSearch = !searchQuery || 
+        coach.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        coach.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        coach.school.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        coach.teamName.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSchool && matchesSearch;
+    });
+  }, [coaches, selectedSchool, searchQuery]);
+
+  const clearFilters = () => {
+    setSelectedSchool('');
+    setSearchQuery('');
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-12xl mx-auto">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold text-gray-900">Coaches</h1>
           <p className="mt-2 text-sm text-gray-700">
-            A list of all coaches in your organization.
+            {filteredCoaches.length} coach{filteredCoaches.length !== 1 ? 'es' : ''} found
           </p>
         </div>
-        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
-            onClick={handleAddNewClick}
+            onClick={() => {
+              setEditingCoach(null);
+              setFormData({
+                name: '',
+                teamName: '',
+                experience: '',
+                specialization: '',
+                school: '',
+                email: '',
+                phone: '',
+                profilePicture: null,
+                profilePicturePreview: '',
+              });
+              setIsFormOpen(true);
+            }}
+            className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
           >
-            Add New Coach
+            Add Coach
           </button>
+        </div>
+      </div>     
+     <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex gap-4">
+          <SchoolDropdown
+            value={selectedSchool}
+            onChange={(e) => setSelectedSchool(e.target.value)}
+            className="flex-1"
+          />
+          {(selectedSchool || searchQuery) && (
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="relative" ref={searchRef}>
-        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-        </div>
-        <input
-          type="text"
-          className="block w-full rounded-md border-0 py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-          placeholder="Search coaches by name, team, specialization, or school..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
-        />
-
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm max-h-60">
-            {suggestions.map((coach) => (
-              <div
-                key={coach.id}
-                className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50"
-                onClick={() => handleSuggestionClick(coach)}
-              >
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-900">{coach.name}</span>
-                  <span className="ml-2 text-gray-500">
-                    {coach.teamName} • {coach.specialization} • {coach.school}
-                  </span>
-                </div>
-              </div>
-            ))}
+      <div className="mt-8 flex flex-col">
+        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+              <Table
+                data={filteredCoaches}
+                columns={columns}
+                onRowClick={(coach) => setSelectedCoach(coach)}
+                renderCell={(row, column) => {
+                  if (column.key === 'actions') {
+                    return (
+                      <div className="flex items-center space-x-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingCoach(row);
+                            setFormData({
+                              ...row,
+                              profilePicturePreview: row.profilePicture,
+                            });
+                            setIsFormOpen(true);
+                          }}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          <PencilSquareIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const confirmDelete = window.confirm('Are you sure you want to delete this coach?');
+                            if (confirmDelete) {
+                              setCoaches(coaches.filter((c) => c.id !== row.id));
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Coach Form Modal */}
@@ -372,35 +428,38 @@ function Coach() {
                           />
                         </div>
                         <div className="">
-                           <SportCategoryDropdown
+                          <label htmlFor="specialization" className="block text-sm font-medium text-gray-800 mb-1">
+                            Specialization
+                          </label>
+                          <input
+                            type="text"
+                            name="specialization"
+                            id="specialization"
                             value={formData.specialization}
                             onChange={handleInputChange}
-                            label="Specialization"
+                            className="input-primary"
                             required
                           />
                         </div>
-                        <div className="">
-                          <SchoolDropdown
-                            value={formData.school}
-                            onChange={handleInputChange}
-                            label="School"
-                            required
-                          />
-                        </div>
+                        <SchoolDropdown
+                          value={formData.school}
+                          onChange={handleInputChange}
+                          required
+                        />
                       </div>
-                      <div className="mt-4 flex justify-end space-x-3">
+                      <div className="mt-6 flex justify-end space-x-3">
                         <button
                           type="button"
-                          className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                           onClick={handleCloseModal}
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                          {editingCoach ? 'Update Coach' : 'Add Coach'}
+                          {editingCoach ? 'Save Changes' : 'Add Coach'}
                         </button>
                       </div>
                     </form>
@@ -412,22 +471,27 @@ function Coach() {
         </Dialog>
       </Transition>
 
-      <CoachDetailCard 
-        coach={selectedCoach} 
-        onClose={() => setSelectedCoach(null)} 
-        onEdit={handleEdit} // Note: onEdit and onDelete on the table row itself are now for the detail card
-        onDelete={handleDelete} // They trigger the same functions, but the buttons are rendered via the 'actions' key
+      {/* Coach Detail Card */}
+      <Transition
         show={showDetailCard}
-      />
-
-      <Table
-        columns={columns}
-        data={filteredCoaches}
-        onEdit={handleEdit} // Note: onEdit and onDelete on the table row itself are now for the detail card
-        onDelete={handleDelete} // They trigger the same functions, but the buttons are rendered via the 'actions' key
-      />
+        enter="transition ease-out duration-300"
+        enterFrom="opacity-0 translate-y-4"
+        enterTo="opacity-100 translate-y-0"
+        leave="transition ease-in duration-150"
+        leaveFrom="opacity-100 translate-y-0"
+        leaveTo="opacity-0 translate-y-4"
+      >
+        {selectedCoach && (
+          <div className="fixed bottom-0 right-0 mb-4 mr-4 w-96">
+            <CoachDetailCard
+              coach={selectedCoach}
+              onClose={() => setSelectedCoach(null)}
+            />
+          </div>
+        )}
+      </Transition>
     </div>
   );
 }
 
-export default Coach; 
+export default Coach;

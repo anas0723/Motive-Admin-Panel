@@ -1,10 +1,10 @@
-import { createContext, useContext, useState } from 'react';
-import { initialAthletes } from '../pages/Athlete';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { mockData, getAllAthletes } from '../data/mockDataGenerator';
 
 const AthletesContext = createContext();
 
 export function AthletesProvider({ children }) {
-  const [athletes, setAthletes] = useState(initialAthletes);
+  const [athletes, setAthletes] = useState(() => getAllAthletes(mockData));
 
   return (
     <AthletesContext.Provider value={{ athletes, setAthletes }}>

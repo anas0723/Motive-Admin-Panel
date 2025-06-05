@@ -1,39 +1,35 @@
-import React, { createContext, useContext, useState } from 'react';
-
-// Sample schools data
-export const initialSchools = [
-  { id: 1, name: 'Lincoln High School', location: 'New York', type: 'Public' },
-  { id: 2, name: 'Washington Academy', location: 'Boston', type: 'Private' },
-  { id: 3, name: 'Roosevelt High School', location: 'Chicago', type: 'Public' },
-  { id: 4, name: 'Jefferson Middle School', location: 'Los Angeles', type: 'Public' },
-  { id: 5, name: 'Madison High School', location: 'Seattle', type: 'Private' },
-];
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { mockData } from '../data/mockDataGenerator';
 
 const SchoolsContext = createContext();
 
 export function SchoolsProvider({ children }) {
-  const [schools, setSchools] = useState([
-    { id: 1, name: 'Central High School', city: 'Springfield', state: 'IL' },
-    { id: 2, name: 'Northwood Academy', city: 'Oakville', state: 'CA' },
-    { id: 3, name: 'Riverside Prep', city: 'Maplewood', state: 'NY' },
-    { id: 4, name: 'Mountain View High', city: 'Boulder', state: 'CO' },
-    { id: 5, name: 'Coastline Academy', city: 'Santa Monica', state: 'CA' },
-  ]);
-
-  const addSchool = (newSchool) => {
-    const schoolWithId = {
+  const [schools, setSchools] = useState(mockData.schools);
+  const [selectedSchool, setSelectedSchool] = useState(null);
+  const addSchool = useCallback((newSchool) => {
+    setSchools(prevSchools => [...prevSchools, {
       ...newSchool,
-      id: schools.length + 1,
-    };
-    setSchools(prevSchools => [...prevSchools, schoolWithId]);
-  };
+      id: Math.random().toString(36).substr(2, 9),
+      teams: []
+    }]);
+  }, []);
 
-  const getSchoolById = (id) => {
+  const getSchoolById = useCallback((id) => {
     return schools.find(school => school.id === id);
-  };
+  }, [schools]);
+
+  const selectSchool = useCallback((school) => {
+    setSelectedSchool(school);
+  }, []);
 
   return (
-    <SchoolsContext.Provider value={{ schools, addSchool, getSchoolById }}>
+    <SchoolsContext.Provider value={{ 
+      schools, 
+      addSchool, 
+      getSchoolById, 
+      selectedSchool,
+      selectSchool
+    }}>
       {children}
     </SchoolsContext.Provider>
   );

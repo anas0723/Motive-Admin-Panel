@@ -17,10 +17,9 @@ function SchoolDropdown({ value, onChange, label = 'Select School', required = f
         required={required}
         className="block w-full rounded-md border-gray-300 py-2 px-3 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
       >
-        <option value="">Choose a school...</option>
-        {schools.map((school) => (
-          <option key={school.id} value={school.id}>
-            {school.name} - {school.city}, {school.state}
+        <option value="">Choose a school...</option>        {schools.map((school) => (
+          <option key={school.id} value={school.name}>
+            {school.name}
           </option>
         ))}
       </select>
