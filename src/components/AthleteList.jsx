@@ -56,15 +56,7 @@ function AthleteList() {
     setSelectedAthlete(null);
   };
 
-  const handleEdit = (athlete) => {
-    // Implement edit functionality
-    console.log('Edit athlete:', athlete);
-  };
 
-  const handleDelete = (athlete) => {
-    // Implement delete functionality
-    console.log('Delete athlete:', athlete);
-  };
 
   return (
     <div className="space-y-6">
@@ -144,13 +136,7 @@ function AthleteList() {
                 >
                   View Details
                 </button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => handleEdit(athlete)}
-                >
-                  Edit
-                </Button>
+               
               </div>
             </div>
           </Card>
