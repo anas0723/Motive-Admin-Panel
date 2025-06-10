@@ -1,36 +1,20 @@
-import { useState, useRef, useEffect, Fragment, useMemo } from 'react';
+import { useState, Fragment, useMemo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import Table from '../components/Table';
 import { MagnifyingGlassIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
-import CoachDetailCard from '../components/CoachDetailCard';
-import { initialTeams } from './Team'; // Import initialTeams
-import SchoolSelect from '../components/SchoolSelect';
 import SchoolDropdown from '../components/SchoolDropdown';
 import ProfilePictureUploader from '../components/ProfilePictureUploader';
 import SportCategoryDropdown from '../components/SportCategoryDropdown';
 import { useSchools } from '../context/SchoolsContext';
 import PersonCard from '../components/PersonCard';
 import PersonDetailModal from '../components/PersonDetailModal';
-import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import SchoolFilter from '../components/SchoolFilter';
+import SchoolSelect from '../components/SchoolSelect';
 
 const initialCoaches = [
-  { id: 1, name: 'Sarah Wilson', teamName: 'Team Alpha', experience: '10 years', specialization: 'Running', school: 'Central High School', email: 'sarah.wilson@example.com', phone: '555-2345', profilePicture: 'https://randomuser.me/api/portraits/women/4.jpg' },
-  { id: 2, name: 'David Brown', teamName: 'Team Beta', experience: '8 years', specialization: 'Swimming', school: 'Northwood Academy', email: 'david.brown@example.com', phone: '555-6789', profilePicture: 'https://randomuser.me/api/portraits/men/5.jpg' },
-  { id: 3, name: 'Lisa Chen', teamName: 'Team Alpha', experience: '12 years', specialization: 'Cycling', school: 'Riverside Prep', email: 'lisa.chen@example.com', phone: '555-0123', profilePicture: 'https://randomuser.me/api/portraits/women/6.jpg' },
-];
-
-const columns = [
-  { key: 'name', label: 'Name' },
-  { key: 'email', label: 'Email Address' },
-  { key: 'phone', label: 'Phone Number' },
-  { key: 'teamName', label: 'Team' }, // Use teamName for the column
-  { key: 'experience', label: 'Experience' },
-  { key: 'specialization', label: 'Specialization' },
-  { key: 'school', label: 'School' },
-  { key: 'actions', label: 'Actions' },
+  { id: 1, name: 'Sarah Wilson', teamName: 'Team Alpha', experience: '10 years', specialization: 'Running', school: 'Central High School', email: 'sarah.wilson@example.com', phone: '555-2345', profilePicture: 'https://randomuser.me/api/portraits/women/4.jpg', sport: 'Basketball' },
+  { id: 2, name: 'David Brown', teamName: 'Team Beta', experience: '8 years', specialization: 'Swimming', school: 'Northwood Academy', email: 'david.brown@example.com', phone: '555-6789', profilePicture: 'https://randomuser.me/api/portraits/men/5.jpg', sport: 'Basketball' },
+  { id: 3, name: 'Lisa Chen', teamName: 'Team Alpha', experience: '12 years', specialization: 'Cycling', school: 'Riverside Prep', email: 'lisa.chen@example.com', phone: '555-0123', profilePicture: 'https://randomuser.me/api/portraits/women/6.jpg', sport: 'Basketball' },
 ];
 
 function Coach() {
@@ -38,7 +22,6 @@ function Coach() {
   const [editingCoach, setEditingCoach] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    teamName: '',
     experience: '',
     specialization: '',
     school: '',
@@ -46,39 +29,14 @@ function Coach() {
     phone: '',
     profilePicture: null,
     profilePicturePreview: '',
+    sport: '',
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
-  const searchRef = useRef(null);
   const [selectedCoach, setSelectedCoach] = useState(null);
-  const [showDetailCard, setShowDetailCard] = useState(false);
   const { schools } = useSchools(); // Access schools from context
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowSuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (selectedCoach) {
-      setShowDetailCard(true);
-    } else {
-      const timer = setTimeout(() => setShowDetailCard(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedCoach]);
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
@@ -135,7 +93,6 @@ function Coach() {
     setEditingCoach(coach);
     setFormData({
       name: coach.name,
-      teamName: coach.teamName,
       experience: coach.experience,
       specialization: coach.specialization,
       school: coach.school,
@@ -143,6 +100,7 @@ function Coach() {
       phone: coach.phone,
       profilePicture: null,
       profilePicturePreview: coach.profilePicture,
+      sport: coach.sport,
     });
     setIsFormOpen(true);
     setSelectedCoach(null);
@@ -157,7 +115,7 @@ function Coach() {
 
   const handleAddNewClick = () => {
     setEditingCoach(null);
-    setFormData({ name: '', teamName: '', experience: '', specialization: '', school: '', email: '', phone: '', profilePicture: null, profilePicturePreview: '' });
+    setFormData({ name: '', experience: '', specialization: '', school: '', email: '', phone: '', profilePicture: null, profilePicturePreview: '', sport: '' });
     setIsFormOpen(true);
     setSelectedCoach(null);
   };
@@ -165,26 +123,6 @@ function Coach() {
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-
-    if (query.length > 0) {
-      const filtered = coaches.filter(coach => 
-        coach.name.toLowerCase().includes(query.toLowerCase()) ||
-        coach.teamName.toLowerCase().includes(query.toLowerCase()) ||
-        coach.specialization.toLowerCase().includes(query.toLowerCase()) ||
-        coach.school.toLowerCase().includes(query.toLowerCase())
-      );
-      setSuggestions(filtered);
-      setShowSuggestions(true);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleSuggestionClick = (coach) => {
-    setSearchQuery(`${coach.name} • ${coach.teamName} • ${coach.specialization} • ${coach.school}`);
-    setSuggestions([]);
-    setShowSuggestions(false);
   };
 
   const handleViewDetails = (coach) => {
@@ -197,7 +135,6 @@ function Coach() {
     setEditingCoach(null);
     setFormData({
       name: '',
-      teamName: '',
       experience: '',
       specialization: '',
       school: '',
@@ -205,6 +142,7 @@ function Coach() {
       phone: '',
       profilePicture: null,
       profilePicturePreview: '',
+      sport: '',
     });
     setShowModal(false);
   };
@@ -216,15 +154,18 @@ function Coach() {
       const matchesSearch = !searchQuery || 
         coach.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         coach.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        coach.school.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        coach.teamName.toLowerCase().includes(searchQuery.toLowerCase());
+        coach.school.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesSchool && matchesSearch;
     });
   }, [coaches, selectedSchool, searchQuery]);
 
-  const clearFilters = () => {
+  const handleClearFilters = () => {
     setSelectedSchool(null);
     setSearchQuery('');
+  };
+
+  const handleSchoolChange = (school) => {
+    setSelectedSchool(school ? school.name : null);
   };
 
   return (
@@ -238,39 +179,195 @@ function Coach() {
       </div>
 
       {/* Search and filters */}
-      <Card className="p-4">
+      <div className="mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
-          <Input
-            placeholder="Search coaches..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="sm:max-w-xs"
-          />
-          <SchoolFilter
-            schools={schools}
-            selectedSchool={selectedSchool}
-            onChange={setSelectedSchool}
-          />
+          <div className="w-full sm:w-64">
+            <label htmlFor="school-filter" className="block text-sm font-medium text-gray-700">
+              Filter by School
+            </label>
+            <SchoolDropdown
+              id="school-filter"
+              value={selectedSchool}
+              onChange={handleSchoolChange}
+              label=""
+              className="mb-0"
+            />
+          </div>
+          <div className="flex-1 mt-6 sm:mt-0">
+            <label htmlFor="coach-search" className="block text-sm font-medium text-gray-700 sr-only">
+              Search coaches
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                type="text"
+                id="coach-search"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="Search Coaches..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </div>
+          </div>
         </div>
-      </Card>
 
-      {/* Coaches table */}
-      <Table
-        columns={columns}
-        data={filteredCoaches}
-        onViewDetails={handleViewDetails}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+        {/* Results Counter */}
+        {(selectedSchool || searchQuery) && (
+          <div className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-md">
+            <div className="text-sm text-gray-600">
+              Showing {filteredCoaches.length} {filteredCoaches.length === 1 ? 'coach' : 'coaches'}
+              {selectedSchool && ` from ${selectedSchool}`}
+            </div>
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none flex items-center gap-1"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              Clear filters
+            </button>
+          </div>
+        )}
+      </div>
 
-      {/* Coach details modal */}
-      <PersonDetailModal
-        person={selectedCoach}
-        show={showModal}
-        onClose={handleCloseModal}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {/* Coaches Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCoaches.map((coach) => (
+          <PersonCard
+            key={coach.id}
+            person={coach}
+            onViewDetails={() => handleViewDetails(coach)}
+          />
+        ))}
+      </div>
+
+      {/* Coach Form Modal (Add/Edit Coach) */}
+      <Transition appear show={isFormOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-10" onClose={handleCloseModal}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900"
+                  >
+                    {editingCoach ? 'Edit Coach' : 'Add New Coach'}
+                  </Dialog.Title>
+                  <div className="mt-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <ProfilePictureUploader
+                        currentPicture={formData.profilePicturePreview}
+                        onSelectPicture={handleProfilePictureSelect}
+                        onRemovePicture={handleProfilePictureRemove}
+                      />
+                      <Input
+                        label="Coach Name"
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="Coach Name"
+                        required
+                      />
+                      <Input
+                        label="Email Address"
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="Email Address"
+                        required
+                      />
+                      <Input
+                        label="Phone Number"
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        placeholder="Phone Number"
+                      />
+                      <Input
+                        label="Experience"
+                        type="text"
+                        name="experience"
+                        value={formData.experience}
+                        onChange={handleInputChange}
+                        placeholder="e.g., 10 years"
+                      />
+                      <Input
+                        label="Specialization"
+                        type="text"
+                        name="specialization"
+                        value={formData.specialization}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Running, Swimming"
+                      />
+                      <SportCategoryDropdown
+                        selectedSport={formData.sport}
+                        onSelectSport={(sport) => setFormData({ ...formData, sport: sport?.name || '' })}
+                      />
+                      <SchoolSelect
+                        schools={schools}
+                        selectedSchool={schools.find(s => s.name === formData.school)}
+                        onSelectSchool={(school) => setFormData({ ...formData, school: school?.name || '' })}
+                      />
+
+                      <div className="mt-6 flex justify-end gap-3">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={handleCloseModal}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit">
+                          {editingCoach ? 'Save Changes' : 'Add Coach'}
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Person Detail Modal */}
+      {selectedCoach && (
+        <PersonDetailModal
+          show={showModal}
+          onClose={handleCloseModal}
+          person={selectedCoach}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 }

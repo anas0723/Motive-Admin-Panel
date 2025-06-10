@@ -1,3 +1,4 @@
+import React from 'react';
 import { XMarkIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 function AthleteDetailCard({
@@ -14,7 +15,10 @@ function AthleteDetailCard({
       <div className={`relative w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl bg-white rounded-lg shadow-xl transform transition-all duration-300 ${show ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-bold text-gray-900">{athlete?.name}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+          <button 
+            onClick={onClose} 
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 rounded-full p-1"
+          >
             <XMarkIcon className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
@@ -22,17 +26,26 @@ function AthleteDetailCard({
         <div className="p-6 text-sm text-gray-700 space-y-3">
           {athlete?.profilePicture && (
             <div className="flex justify-center mb-4">
-              <img src={athlete.profilePicture} alt={`${athlete.name}'s profile`} className="w-24 h-24 rounded-full object-cover" />
+              <img 
+                src={athlete.profilePicture} 
+                alt={`${athlete.name}'s profile`} 
+                className="w-24 h-24 rounded-full object-cover ring-4 ring-indigo-100"
+              />
             </div>
           )}
-          <p><strong className="font-semibold">Email:</strong> {athlete?.email}</p>
-          <p><strong className="font-semibold">Phone:</strong> {athlete?.phone}</p>
-          <p><strong className="font-semibold">Age:</strong> {athlete?.age}</p>
-          <p><strong className="font-semibold">Team:</strong> {athlete?.team}</p>
-          <p><strong className="font-semibold">Sport:</strong> {athlete?.sport}</p>
-          <p><strong className="font-semibold">School:</strong> {athlete?.school}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <p><strong className="font-semibold">Email:</strong> {athlete?.email}</p>
+              <p><strong className="font-semibold">Phone:</strong> {athlete?.phone}</p>
+              <p><strong className="font-semibold">Team:</strong> {athlete?.team}</p>
+            </div>
+            <div className="space-y-2">
+              <p><strong className="font-semibold">Age:</strong> {athlete?.age}</p>
+              <p><strong className="font-semibold">Sport:</strong> {athlete?.sport}</p>
+              <p><strong className="font-semibold">School:</strong> {athlete?.school}</p>
+            </div>
+          </div>
 
-          {/* Performance Metrics Section */}
           <div className="pt-4 border-t border-gray-200 mt-4">
             <p className="font-bold text-gray-900 mb-2">Performance Metrics</p>
             <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-600">

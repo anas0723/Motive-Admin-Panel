@@ -12,7 +12,7 @@ function SchoolFilter({ schools, selectedSchool, onChange, label = 'Filter by Sc
           <Listbox.Label className="block text-sm font-medium text-gray-700 mb-1">
             {label}
           </Listbox.Label>
-          <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+          <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ">
             <span className="block truncate">
               {selectedSchool ? selectedSchool.name : 'All Schools'}
             </span>
