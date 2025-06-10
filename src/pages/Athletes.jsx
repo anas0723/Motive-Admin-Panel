@@ -1,25 +1,120 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Table from '../components/Table';
+import PersonDetailModal from '../components/PersonDetailModal';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import SchoolFilter from '../components/SchoolFilter';
 
 const Athletes = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState(null);
+  const [selectedAthlete, setSelectedAthlete] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [schools, setSchools] = useState([]);
 
-  // Mock data
+  // Mock data for schools
+  useEffect(() => {
+    setSchools([
+      { id: 1, name: 'Lincoln High School' },
+      { id: 2, name: 'Washington Academy' },
+      { id: 3, name: 'Central High School' },
+    ]);
+  }, []);
+
+  // Mock data for athletes
   const athletes = [
-    { id: 1, name: 'John Doe', team: 'Team A', sport: 'Basketball', school: 'School 1' },
-    { id: 2, name: 'Jane Smith', team: 'Team B', sport: 'Swimming', school: 'School 2' },
-    // Add more mock data
+    {
+      id: 1,
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      phone: '(555) 123-4567',
+      address: '123 Main St, City, State',
+      dob: '2000-01-15',
+      teamName: 'Varsity Basketball',
+      experience: '2 years',
+      specialization: 'Forward',
+      sport: 'Basketball',
+      school: 'Lincoln High School',
+      profilePicture: 'https://randomuser.me/api/portraits/men/1.jpg',
+    },
+    {
+      id: 2,
+      name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      phone: '(555) 987-6543',
+      address: '456 Oak Ave, City, State',
+      dob: '2001-03-20',
+      teamName: 'Varsity Swimming',
+      experience: '3 years',
+      specialization: 'Freestyle',
+      sport: 'Swimming',
+      school: 'Washington Academy',
+      profilePicture: 'https://randomuser.me/api/portraits/women/2.jpg',
+    },
+    {
+      id: 3,
+      name: 'Mike Johnson',
+      email: 'mike.j@example.com',
+      phone: '(555) 456-7890',
+      address: '789 Sports Blvd, City, State',
+      dob: '2002-07-10',
+      teamName: 'Varsity Football',
+      experience: '1 year',
+      specialization: 'Quarterback',
+      sport: 'Football',
+      school: 'Central High School',
+      profilePicture: 'https://randomuser.me/api/portraits/men/3.jpg',
+    }
   ];
+
+  const columns = [
+    { key: 'profilePicture', label: '' },
+    { key: 'name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'phone', label: 'Phone' },
+    { key: 'teamName', label: 'Team Name' },
+    { key: 'experience', label: 'Experience' },
+    { key: 'specialization', label: 'Specialization' },
+    { key: 'school', label: 'School' },
+  ];
+
+  const handleViewDetails = (athlete) => {
+    setSelectedAthlete(athlete);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedAthlete(null);
+  };
+
+  const handleEdit = (athlete) => {
+    // Implement edit functionality
+    console.log('Edit athlete:', athlete);
+  };
+
+  const handleDelete = (athlete) => {
+    if (window.confirm(`Are you sure you want to delete ${athlete.name}?`)) {
+      // Implement delete functionality
+      console.log('Delete athlete:', athlete);
+    }
+  };
+
+  // Filter athletes based on search query and selected school
+  const filteredAthletes = athletes.filter(athlete =>
+    (athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    athlete.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    athlete.school.toLowerCase().includes(searchQuery.toLowerCase())) &&
+    (!selectedSchool || athlete.school === selectedSchool.name)
+  );
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Athletes</h1>
-        <Button onClick={() => setIsModalOpen(true)}>
+        <Button onClick={() => {/* Add new athlete */}}>
           Add New Athlete
         </Button>
       </div>
@@ -33,62 +128,31 @@ const Athletes = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="sm:max-w-xs"
           />
-          {/* Add more filters here */}
+          <SchoolFilter
+            schools={schools}
+            selectedSchool={selectedSchool}
+            onChange={setSelectedSchool}
+          />
         </div>
       </Card>
 
-      {/* Athletes list */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {athletes.map((athlete) => (
-          <Card key={athlete.id} className="hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">{athlete.name}</h3>
-                <p className="text-sm text-gray-500">{athlete.team}</p>
-              </div>
-              <Button variant="ghost" size="sm">
-                View Details
-              </Button>
-            </div>
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center text-sm">
-                <span className="text-gray-500 w-20">Sport:</span>
-                <span className="text-gray-900">{athlete.sport}</span>
-              </div>
-              <div className="flex items-center text-sm">
-                <span className="text-gray-500 w-20">School:</span>
-                <span className="text-gray-900">{athlete.school}</span>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      {/* Athletes table */}
+      <Table
+        columns={columns}
+        data={filteredAthletes}
+        onViewDetails={handleViewDetails}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
 
-      {/* Add/Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-lg">
-            <h2 className="text-xl font-bold mb-4">Add New Athlete</h2>
-            <form className="space-y-4">
-              <Input label="Name" placeholder="Enter athlete name" />
-              <Input label="Team" placeholder="Select team" />
-              <Input label="Sport" placeholder="Select sport" />
-              <Input label="School" placeholder="Select school" />
-              <div className="flex justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  Save Athlete
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      )}
+      {/* Athlete details modal */}
+      <PersonDetailModal
+        person={selectedAthlete}
+        show={showModal}
+        onClose={handleCloseModal}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 };

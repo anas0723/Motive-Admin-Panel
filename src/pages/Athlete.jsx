@@ -9,6 +9,8 @@ import SchoolSelect from '../components/SchoolSelect';
 import SchoolDropdown from '../components/SchoolDropdown';
 import ProfilePictureUploader from '../components/ProfilePictureUploader';
 import SportCategoryDropdown from '../components/SportCategoryDropdown';
+import PersonCard from '../components/PersonCard';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 // Initial athletes data
 export const initialAthletes = [
@@ -196,7 +198,7 @@ function Athlete() {
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold text-gray-900">Athletes</h1>
           <p className="mt-2 text-sm text-gray-700">
-            A list of all athletes in your organization including their name, age, sport, team, and school.
+            A list of all athletes in your organization including their name, sport, and school.
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
@@ -208,7 +210,9 @@ function Athlete() {
             Add New Athlete
           </button>
         </div>
-      </div>      {/* Filters */}
+      </div>
+
+      {/* Filters */}
       <div className="mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-64">
@@ -219,38 +223,23 @@ function Athlete() {
               className="mb-0"
             />
           </div>
-
-          <div className="w-full sm:w-96">
-            <label htmlFor="athlete-search" className="block text-sm font-medium text-gray-700 mb-1">
-              Search Athletes
-            </label>
-            <div className="relative rounded-md shadow-sm">
+          <div className="flex-1">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </div>
               <input
                 type="text"
-                id="athlete-search"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="Search athletes..."
                 value={searchQuery}
-                onChange={handleSearchChange}
-                className="block w-full rounded-md border-gray-300 pl-4 pr-12 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Search by name, team, or sport..."
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-              {searchQuery && (
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="text-gray-400 hover:text-gray-600 focus:outline-none"
-                  >
-                    <span className="sr-only">Clear search</span>
-                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
 
+        {/* Results Counter */}
         {(selectedSchool || searchQuery) && (
           <div className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-md">
             <div className="text-sm text-gray-600">
@@ -271,10 +260,15 @@ function Athlete() {
         )}
       </div>
 
-      {/* Results Counter */}
-      <div className="mb-4 text-sm text-gray-600">
-        Showing {filteredAthletes.length} {filteredAthletes.length === 1 ? 'athlete' : 'athletes'}
-        {selectedSchool && ` from ${selectedSchool}`}
+      {/* Athletes Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredAthletes.map((athlete) => (
+          <PersonCard
+            key={athlete.id}
+            person={athlete}
+            onViewDetails={handleViewAthleteDetails}
+          />
+        ))}
       </div>
 
       {/* Athlete Form Modal */}
@@ -426,20 +420,7 @@ function Athlete() {
         </Dialog>
       </Transition>
 
-      <div className="mt-8 flex flex-col">
-        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <Table
-              columns={athleteColumns}
-              data={filteredAthletes}
-              onEdit={handleEditAthlete}
-              onDelete={handleDeleteAthlete}
-              onRowClick={handleViewAthleteDetails}
-            />
-          </div>
-        </div>
-      </div>
-
+      {/* Athlete Details Modal */}
       <AthleteDetailCard
         athlete={selectedAthlete}
         show={showDetailCard}

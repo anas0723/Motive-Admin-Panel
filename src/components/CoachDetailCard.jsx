@@ -27,7 +27,7 @@ function CoachDetailCard({
           )}
           <p><strong className="font-semibold">Email:</strong> {coach?.email}</p>
           <p><strong className="font-semibold">Phone:</strong> {coach?.phone}</p>
-          <p><strong className="font-semibold">Team:</strong> {coach?.team}</p>
+          <p><strong className="font-semibold">Team:</strong> {coach?.teamName}</p>
           <p><strong className="font-semibold">Experience:</strong> {coach?.experience}</p>
           <p><strong className="font-semibold">Specialization:</strong> {coach?.specialization}</p>
           <p><strong className="font-semibold">School:</strong> {coach?.school}</p>
@@ -46,19 +46,17 @@ function CoachDetailCard({
 
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
           <button
-            type="button"
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
             onClick={() => onEdit(coach)}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            <PencilSquareIcon className="-ml-1 mr-2 h-5 w-5 text-gray-500" aria-hidden="true" />
+            <PencilSquareIcon className="h-4 w-4 mr-2" />
             Edit
           </button>
           <button
-            type="button"
-            className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200"
             onClick={() => onDelete(coach)}
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
-            <TrashIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+            <TrashIcon className="h-4 w-4 mr-2" />
             Delete
           </button>
         </div>  
