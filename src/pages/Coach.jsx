@@ -10,6 +10,8 @@ import PersonDetailModal from '../components/PersonDetailModal';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import SchoolSelect from '../components/SchoolSelect';
+import LimitSelector from '../components/LimitSelector';
+import PaginatedList from '../components/PaginatedList';
 
 const initialCoaches = [
   { id: 1, name: 'Sarah Wilson', teamName: 'Team Alpha', experience: '10 years', specialization: 'Running', school: 'Central High School', email: 'sarah.wilson@example.com', phone: '555-2345', profilePicture: 'https://randomuser.me/api/portraits/women/4.jpg', sport: 'Basketball' },
@@ -159,6 +161,16 @@ function Coach() {
     });
   }, [coaches, selectedSchool, searchQuery]);
 
+  // const paginatedCoaches = useMemo(() => {
+  //   if (displayLimit === 'All') {
+  //     return filteredCoaches;
+  //   } else {
+  //     return filteredCoaches.slice(0, displayLimit);
+  //   }
+  // }, [filteredCoaches, displayLimit]); // Moved to PaginatedList
+
+  const { paginatedData: paginatedCoaches, paginationControls } = PaginatedList({ data: filteredCoaches });
+
   const handleClearFilters = () => {
     setSelectedSchool(null);
     setSearchQuery('');
@@ -204,7 +216,7 @@ function Coach() {
               <input
                 type="text"
                 id="coach-search"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 mt-6 sm:text-sm"
                 placeholder="Search Coaches..."
                 value={searchQuery}
                 onChange={handleSearchChange}
@@ -236,7 +248,7 @@ function Coach() {
 
       {/* Coaches Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCoaches.map((coach) => (
+        {paginatedCoaches.map((coach) => (
           <PersonCard
             key={coach.id}
             person={coach}
@@ -244,6 +256,9 @@ function Coach() {
           />
         ))}
       </div>
+
+      {/* Pagination/Limit Selector */}
+      {paginationControls}
 
       {/* Coach Form Modal (Add/Edit Coach) */}
       <Transition appear show={isFormOpen} as={Fragment}>

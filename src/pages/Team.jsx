@@ -6,6 +6,7 @@ import AthleteDetailCard from '../components/AthleteDetailCard';
 import SchoolSearch from '../components/SchoolSearch';
 import SchoolSelect from '../components/SchoolSelect';
 import SchoolDropdown from '../components/SchoolDropdown';
+import LimitSelector from '../components/LimitSelector';
 
 export const initialTeams = [
   { id: 1, name: 'Team Alpha', coach: 'John Smith', school: 'Lincoln High School' },
@@ -41,6 +42,8 @@ function Team() {
   const [selectedAthlete, setSelectedAthlete] = useState(null);
   const [showDetailCard, setShowDetailCard] = useState(false);
   const [editingAthlete, setEditingAthlete] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -128,6 +131,21 @@ function Team() {
   const teamAthletes = selectedTeam
     ? athletes.filter(athlete => athlete.team === selectedTeam.name)
     : [];
+
+  // Calculate paginated athletes
+  const indexOfLastAthlete = currentPage * limit;
+  const indexOfFirstAthlete = indexOfLastAthlete - limit;
+  const paginatedAthletes = limit === 'All' ? teamAthletes : teamAthletes.slice(indexOfFirstAthlete, indexOfLastAthlete);
+  const totalPages = limit === 'All' ? 1 : Math.ceil(teamAthletes.length / limit);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setCurrentPage(1); // Reset to first page when limit changes
+  };
 
   return (
     <div className="space-y-6">
@@ -235,12 +253,45 @@ function Team() {
               </span>
             </div>
             {teamAthletes.length > 0 ? (
-              <Table
-                columns={athleteColumns}
-                data={teamAthletes}
-                onRowClick={handleViewAthleteDetails}
-                hideActions
-              />
+              <>
+                <div className="flex justify-between items-center mb-4">
+                  <LimitSelector limit={limit} onChange={handleLimitChange} />
+                  <span className="text-sm text-gray-500">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                </div>
+                <Table
+                  columns={athleteColumns}
+                  data={paginatedAthletes}
+                  onRowClick={handleViewAthleteDetails}
+                  hideActions
+                />
+                <div className="flex justify-center mt-4 space-x-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  {[...Array(totalPages)].map((_, index) => (
+                    <button
+                      key={index + 1}
+                      onClick={() => handlePageChange(index + 1)}
+                      className="px-3 py-1 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
             ) : (
               <div className="text-center py-8 text-gray-500">
                 No athletes assigned to this team
@@ -250,16 +301,88 @@ function Team() {
         )}
       </div>
 
-      <AthleteDetailCard
-        athlete={selectedAthlete}
-        show={showDetailCard}
-        onClose={() => {
-          setSelectedAthlete(null);
-          setShowDetailCard(false);
-        }}
-        onEdit={handleEditAthlete}
-        onDelete={handleDeleteAthlete}
-      />
+      {showDetailCard && selectedAthlete && (
+        <AthleteDetailCard
+          athlete={selectedAthlete}
+          onClose={() => {
+            setSelectedAthlete(null);
+            setShowDetailCard(false);
+          }}
+          onEdit={handleEditAthlete}
+          onDelete={handleDeleteAthlete}
+        />
+      )}
+
+      {editingAthlete && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Edit Athlete</h2>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            setAthletes(athletes.map(a => a.id === editingAthlete.id ? { ...a, ...editingAthlete } : a));
+            setEditingAthlete(null);
+          }} className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="mb-4">
+                <label htmlFor="athlete-name" className="block text-sm font-medium text-gray-800 mb-1">
+                  Athlete Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  id="athlete-name"
+                  value={editingAthlete.name}
+                  onChange={(e) => setEditingAthlete({ ...editingAthlete, name: e.target.value })}
+                  className="input-primary"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="athlete-age" className="block text-sm font-medium text-gray-800 mb-1">
+                  Age
+                </label>
+                <input
+                  type="number"
+                  name="age"
+                  id="athlete-age"
+                  value={editingAthlete.age}
+                  onChange={(e) => setEditingAthlete({ ...editingAthlete, age: Number(e.target.value) })}
+                  className="input-primary"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="athlete-sport" className="block text-sm font-medium text-gray-800 mb-1">
+                  Sport
+                </label>
+                <input
+                  type="text"
+                  name="sport"
+                  id="athlete-sport"
+                  value={editingAthlete.sport}
+                  onChange={(e) => setEditingAthlete({ ...editingAthlete, sport: e.target.value })}
+                  className="input-primary"
+                  required
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                onClick={() => setEditingAthlete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

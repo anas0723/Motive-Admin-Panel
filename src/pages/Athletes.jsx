@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Table from '../components/Table';
 import PersonDetailModal from '../components/PersonDetailModal';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import SchoolFilter from '../components/SchoolFilter';
+import LimitSelector from '../components/LimitSelector';
+import PaginatedList from '../components/PaginatedList';
 
 const Athletes = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -102,12 +104,16 @@ const Athletes = () => {
   };
 
   // Filter athletes based on search query and selected school
-  const filteredAthletes = athletes.filter(athlete =>
-    (athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    athlete.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    athlete.school.toLowerCase().includes(searchQuery.toLowerCase())) &&
-    (!selectedSchool || athlete.school === selectedSchool.name)
-  );
+  const filteredAthletes = useMemo(() => {
+    return athletes.filter(athlete =>
+      (athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      athlete.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      athlete.school.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (!selectedSchool || athlete.school === selectedSchool.name)
+    );
+  }, [athletes, searchQuery, selectedSchool]);
+
+  const { paginatedData: paginatedAthletes, paginationControls } = PaginatedList({ data: filteredAthletes });
 
   return (
     <div className="space-y-6">
@@ -139,11 +145,14 @@ const Athletes = () => {
       {/* Athletes table */}
       <Table
         columns={columns}
-        data={filteredAthletes}
+        data={paginatedAthletes}
         onViewDetails={handleViewDetails}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
+
+      {/* Pagination/Limit Selector */}
+      {paginationControls}
 
       {/* Athlete details modal */}
       <PersonDetailModal
